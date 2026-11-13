@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoadIQ – Delivery Load Optimisation Engine</title>
+  <style>
+    /* ========== RESET & BASE ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+    }
+
+    /* ========== HEADER ========== */
+    header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%);
+      color: white;
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    header .logo {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    header .logo span { color: #60b8ff; }
+
+    header .tagline {
+      font-size: 0.95rem;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    header .badge {
+      margin-left: auto;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      letter-spacing: 0.5px;
+    }
+
+    /* ========== LAYOUT ========== */
+    main {
+      max-width: 1200px;
+      margin: 32px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+    }
+
+    /* ========== CARDS ========== */
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 20px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    .card-body { padding: 20px; }
+
+    /* colour themes per card */
+    .card-parcel .card-header { background: #e8f4fd; color: #1e3a5f; border-bottom: 2px solid #2d6a9f; }
+    .card-van    .card-header { background: #e8fdf0; color: #1a4731; border-bottom: 2px solid #2e7d52; }
+    .card-action .card-header { background: #fdf4e8; color: #5a3800; border-bottom: 2px solid #d48806; }
+    .card-results .card-header { background: #f3e8fd; color: #3b1a5f; border-bottom: 2px solid #7c3aed; }
+    .card-data   .card-header { background: #e8f8fd; color: #0c4a6e; border-bottom: 2px solid #0369a1; }
+
+    /* ========== FORMS ========== */
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 7px;
+      font-size: 0.93rem;
+      color: #1a202c;
+      background: #f8fafc;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input[type="text"]:focus, input[type="number"]:focus, select:focus {
+      border-color: #2d6a9f;
+      box-shadow: 0 0 0 3px rgba(45,106,159,0.12);
+      background: white;
+    }
+
+    .error-msg {
+      color: #c53030;
+      font-size: 0.8rem;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    /* ========== BUTTONS ========== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-blue   { background: #2d6a9f; color: white; }
+    .btn-blue:hover { background: #1e3a5f; box-shadow: 0 4px 12px rgba(45,106,159,0.3); }
+
+    .btn-green  { background: #2e7d52; color: white; }
+    .btn-green:hover { background: #1a4731; box-shadow: 0 4px 12px rgba(46,125,82,0.3); }
+
+    .btn-orange { background: #d48806; color: white; }
+    .btn-orange:hover { background: #92600a; box-shadow: 0 4px 12px rgba(212,136,6,0.3); }
+
+    .btn-purple { background: #7c3aed; color: white; }
+    .btn-purple:hover { background: #5b21b6; box-shadow: 0 4px 12px rgba(124,58,237,0.3); }
+
+    .btn-gray   { background: #e2e8f0; color: #4a5568; }
+    .btn-gray:hover { background: #cbd5e0; }
+
+    .btn-sm { padding: 6px 14px; width: auto; font-size: 0.82rem; border-radius: 6px; }
+
+    /* ========== LEFT COLUMN (forms stacked) ========== */
+    .left-col { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ========== PRIORITY BADGES ========== */
+    .badge-high   { background: #fed7d7; color: #c53030; padding: 2px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; }
+    .badge-medium { background: #fefcbf; color: #744210; padding: 2px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; }
+    .badge-low    { background: #c6f6d5; color: #1a4731; padding: 2px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; }
+
+    /* ========== TABLES ========== */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 9px 12px;
+      background: #f7fafc;
+      color: #4a5568;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .data-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #edf2f7;
+      vertical-align: middle;
+    }
+
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: #f7fafc; }
+
+    /* ========== PROGRESS BARS ========== */
+    .progress-wrap {
+      background: #e2e8f0;
+      border-radius: 20px;
+      height: 10px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      border-radius: 20px;
+      transition: width 0.6s ease;
+    }
+
+    .progress-bar.weight { background: linear-gradient(90deg, #2d6a9f, #60b8ff); }
+    .progress-bar.volume { background: linear-gradient(90deg, #2e7d52, #68d391); }
+    .progress-bar.danger { background: linear-gradient(90deg, #c53030, #fc8181); }
+
+    /* ========== VAN LOAD CARDS ========== */
+    .van-card {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .van-card:last-child { margin-bottom: 0; }
+
+    .van-card-head {
+      background: #f7fafc;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .van-card-head .van-id {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #1e3a5f;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .van-card-body { padding: 14px 16px; }
+
+    .capacity-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .capacity-item label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #718096;
+      text-transform: uppercase;
+    }
+
+    .capacity-item .cap-value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1a202c;
+      margin: 2px 0 4px;
+    }
+
+    /* ========== ALERT / TOAST ========== */
+    .alert {
+      padding: 11px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alert-success { background: #c6f6d5; color: #1a4731; border: 1px solid #9ae6b4; }
+    .alert-error   { background: #fed7d7; color: #742a2a; border: 1px solid #feb2b2; }
+    .alert-info    { background: #bee3f8; color: #1a365d; border: 1px solid #90cdf4; }
+    .alert-warning { background: #fefcbf; color: #744210; border: 1px solid #faf089; }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: #a0aec0;
+    }
+
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* ========== STATS ROW ========== */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      background: white;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+
+    .stat-box .stat-num {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-box .stat-label {
+      font-size: 0.75rem;
+      color: #718096;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-box.blue  .stat-num { color: #2d6a9f; }
+    .stat-box.green .stat-num { color: #2e7d52; }
+    .stat-box.red   .stat-num { color: #c53030; }
+
+    /* ========== ACTION SECTION ========== */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* ========== TABS ========== */
+    .tab-bar {
+      display: flex;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      padding: 9px 18px;
+      border: none;
+      background: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #718096;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab-btn.active { color: #2d6a9f; border-bottom-color: #2d6a9f; }
+    .tab-btn:hover:not(.active) { color: #1a202c; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ========== FOOTER ========== */
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #718096;
+      font-size: 0.82rem;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 16px;
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 860px) {
+      main { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+      .action-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ========== UTILITY ========== */
+    .text-right { text-align: right; }
+    .text-mono  { font-family: 'Courier New', monospace; }
+    .mt-10 { margin-top: 10px; }
+    .divider { height: 1px; background: #e2e8f0; margin: 14px 0; }
+    .icon { font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+  <div>
+    <div class="logo">Load<span>IQ</span></div>
+    <div class="tagline">Priority-Driven Delivery Load Optimisation Engine</div>
+  </div>
+  <div class="badge">CP-048 · Advanced</div>
+</header>
+
+<!-- ===== MAIN GRID ===== -->
+<main>
+
+  <!-- ===== LEFT COLUMN: INPUT FORMS ===== -->
+  <div class="left-col">
+
+    <!-- Add Parcel -->
+    <div class="card card-parcel">
+      <div class="card-header">
+        <span class="icon">📦</span> Add Parcel
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Parcel ID</label>
+          <input type="text" id="parcel-id" placeholder="e.g. P7" />
+          <div class="error-msg" id="err-parcel-id"></div>
+        </div>
+        <div class="form-group">
+          <label>Weight (kg)</label>
+          <input type="number" id="parcel-weight" placeholder="e.g. 45" min="0.01" step="0.01" />
+          <div class="error-msg" id="err-parcel-weight"></div>
+        </div>
+        <div class="form-group">
+          <label>Volume (m³)</label>
+          <input type="number" id="parcel-volume" placeholder="e.g. 0.8" min="0.01" step="0.01" />
+          <div class="error-msg" id="err-parcel-volume"></div>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="parcel-priority">
+            <option value="1">1 – High (load first)</option>
+            <option value="2">2 – Medium</option>
+            <option value="3">3 – Low (load last)</option>
+          </select>
+        </div>
+        <button class="btn btn-blue" onclick="addParcel()">
+          <span>➕</span> Add Parcel
+        </button>
+      </div>
+    </div>
+
+    <!-- Add Van -->
+    <div class="card card-van">
+      <div class="card-header">
+        <span class="icon">🚚</span> Add Van
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Van ID</label>
+          <input type="text" id="van-id" placeholder="e.g. VAN-C" />
+          <div class="error-msg" id="err-van-id"></div>
+        </div>
+        <div class="form-group">
+          <label>Weight Capacity (kg)</label>
+          <input type="number" id="van-maxw" placeholder="e.g. 200" min="0.01" step="0.01" />
+          <div class="error-msg" id="err-van-maxw"></div>
+        </div>
+        <div class="form-group">
+          <label>Volume Capacity (m³)</label>
+          <input type="number" id="van-maxv" placeholder="e.g. 3.0" min="0.01" step="0.01" />
+          <div class="error-msg" id="err-van-maxv"></div>
+        </div>
+        <button class="btn btn-green" onclick="addVan()">
+          <span>➕</span> Add Van
+        </button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card card-action">
+      <div class="card-header">
+        <span class="icon">⚙️</span> Actions
+      </div>
+      <div class="card-body">
+        <div class="action-grid">
+          <button class="btn btn-orange" onclick="assignParcels()">
+            <span>🔄</span> Assign Parcels
+          </button>
+          <button class="btn btn-gray" onclick="loadSampleData()">
+            <span>📋</span> Load Sample
+          </button>
+        </div>
+        <button class="btn btn-gray mt-10" onclick="clearAll()" style="background:#fff0f0;color:#c53030;">
+          <span>🗑️</span> Clear Everything
+        </button>
+        <div id="action-msg" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+  </div><!-- end left-col -->
+
+  <!-- ===== RIGHT COLUMN: DATA & RESULTS ===== -->
+  <div class="right-col" style="display:flex;flex-direction:column;gap:20px;">
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-box blue">
+        <div class="stat-num" id="stat-parcels">0</div>
+        <div class="stat-label">Parcels</div>
+      </div>
+      <div class="stat-box green">
+        <div class="stat-num" id="stat-vans">0</div>
+        <div class="stat-label">Vans</div>
+      </div>
+      <div class="stat-box red">
+        <div class="stat-num" id="stat-unloaded">–</div>
+        <div class="stat-label">Not Loaded</div>
+      </div>
+    </div>
+
+    <!-- Data Viewer (Tabs) -->
+    <div class="card card-data">
+      <div class="card-header">
+        <span class="icon">📊</span> Data Viewer
+      </div>
+      <div class="card-body">
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('tab-parcels', this)">Parcels</button>
+          <button class="tab-btn" onclick="switchTab('tab-vans', this)">Vans</button>
+        </div>
+
+        <!-- Parcels Table -->
+        <div class="tab-panel active" id="tab-parcels">
+          <div id="parcels-table-wrap">
+            <div class="empty-state">
+              <div class="empty-icon">📦</div>
+              <p>No parcels added yet.<br>Use the form on the left.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vans Table -->
+        <div class="tab-panel" id="tab-vans">
+          <div id="vans-table-wrap">
+            <div class="empty-state">
+              <div class="empty-icon">🚚</div>
+              <p>No vans added yet.<br>Use the form on the left.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results: Load Sheet + Unloaded -->
+    <div class="card card-results">
+      <div class="card-header">
+        <span class="icon">📋</span> Results
+        <span style="font-size:0.78rem;font-weight:400;opacity:0.7;margin-left:4px;">(run "Assign Parcels" first)</span>
+      </div>
+      <div class="card-body">
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('tab-loadsheet', this)">Load Sheet</button>
+          <button class="tab-btn" onclick="switchTab('tab-notloaded', this)">Not Loaded</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-loadsheet">
+          <div id="loadsheet-wrap">
+            <div class="empty-state">
+              <div class="empty-icon">📋</div>
+              <p>Click <strong>Assign Parcels</strong> to generate the load sheet.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-notloaded">
+          <div id="notloaded-wrap">
+            <div class="empty-state">
+              <div class="empty-icon">🚫</div>
+              <p>Click <strong>Assign Parcels</strong> to see which parcels couldn't be loaded.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end right-col -->
+
+</main>
+
+<footer>
+  LoadIQ – CP-048 | Priority-Driven Delivery Load Optimisation Engine | Greedy Algorithm
+</footer>
+
+
+<!-- ===== JAVASCRIPT: ALL LOGIC ===== -->
+<script>
+  // ----------------------------------------------------------------
+  // STATE  (mirrors the Python lists)
+  // ----------------------------------------------------------------
+  let parcels  = [];   // {id, weight, volume, priority}
+  let vans     = [];   // {id, maxW, maxV, loadW, loadV, parcels[]}
+  let unloaded = [];   // {parcel, reason}
+  let assigned = false;
+
+  const PRIORITY_NAMES = { 1: "High", 2: "Medium", 3: "Low" };
+
+  // ----------------------------------------------------------------
+  // HELPERS
+  // ----------------------------------------------------------------
+  function idExists(list, id) {
+    return list.some(item => item.id.toLowerCase() === id.toLowerCase());
+  }
+
+  function showErr(elId, msg) {
+    const el = document.getElementById(elId);
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function clearErr(elId) {
+    const el = document.getElementById(elId);
+    el.textContent = '';
+    el.classList.remove('show');
+  }
+
+  function showActionMsg(msg, type = 'success') {
+    const el = document.getElementById('action-msg');
+    el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    setTimeout(() => { el.innerHTML = ''; }, 4000);
+  }
+
+  function priorityBadge(p) {
+    const cls = p === 1 ? 'high' : p === 2 ? 'medium' : 'low';
+    return `<span class="badge-${cls}">${PRIORITY_NAMES[p]}</span>`;
+  }
+
+  function pct(used, max) {
+    return max > 0 ? Math.min(100, (used / max * 100)).toFixed(0) : 0;
+  }
+
+  function barClass(p) {
+    return p >= 90 ? 'danger' : 'weight';
+  }
+
+  function switchTab(panelId, btn) {
+    // find parent tab-bar and panels (siblings)
+    const bar  = btn.closest('.tab-bar');
+    const body = bar.closest('.card-body') || bar.parentElement;
+    bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    body.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(panelId).classList.add('active');
+  }
+
+  function updateStats() {
+    document.getElementById('stat-parcels').textContent  = parcels.length;
+    document.getElementById('stat-vans').textContent     = vans.length;
+    document.getElementById('stat-unloaded').textContent = assigned ? unloaded.length : '–';
+  }
+
+  // ----------------------------------------------------------------
+  // ADD PARCEL  (mirrors add_parcel())
+  // ----------------------------------------------------------------
+  function addParcel() {
+    let valid = true;
+    clearErr('err-parcel-id');
+    clearErr('err-parcel-weight');
+    clearErr('err-parcel-volume');
+
+    const pid    = document.getElementById('parcel-id').value.trim();
+    const wRaw   = document.getElementById('parcel-weight').value.trim();
+    const vRaw   = document.getElementById('parcel-volume').value.trim();
+    const prio   = parseInt(document.getElementById('parcel-priority').value);
+
+    if (!pid) { showErr('err-parcel-id', 'Parcel ID cannot be empty.'); valid = false; }
+    else if (idExists(parcels, pid)) { showErr('err-parcel-id', 'Parcel ID already exists.'); valid = false; }
+
+    const weight = parseFloat(wRaw);
+    if (!wRaw || isNaN(weight) || weight <= 0) { showErr('err-parcel-weight', 'Enter a number greater than 0.'); valid = false; }
+
+    const volume = parseFloat(vRaw);
+    if (!vRaw || isNaN(volume) || volume <= 0) { showErr('err-parcel-volume', 'Enter a number greater than 0.'); valid = false; }
+
+    if (!valid) return;
+
+    parcels.push({ id: pid, weight, volume, priority: prio });
+
+    // clear fields
+    document.getElementById('parcel-id').value = '';
+    document.getElementById('parcel-weight').value = '';
+    document.getElementById('parcel-volume').value = '';
+    document.getElementById('parcel-priority').value = '1';
+
+    renderParcelsTable();
+    updateStats();
+    showActionMsg(`✅ Parcel <strong>${pid}</strong> added successfully.`);
+  }
+
+  // ----------------------------------------------------------------
+  // ADD VAN  (mirrors add_van())
+  // ----------------------------------------------------------------
+  function addVan() {
+    let valid = true;
+    clearErr('err-van-id');
+    clearErr('err-van-maxw');
+    clearErr('err-van-maxv');
+
+    const vid  = document.getElementById('van-id').value.trim();
+    const wRaw = document.getElementById('van-maxw').value.trim();
+    const vRaw = document.getElementById('van-maxv').value.trim();
+
+    if (!vid) { showErr('err-van-id', 'Van ID cannot be empty.'); valid = false; }
+    else if (idExists(vans, vid)) { showErr('err-van-id', 'Van ID already exists.'); valid = false; }
+
+    const maxW = parseFloat(wRaw);
+    if (!wRaw || isNaN(maxW) || maxW <= 0) { showErr('err-van-maxw', 'Enter a number greater than 0.'); valid = false; }
+
+    const maxV = parseFloat(vRaw);
+    if (!vRaw || isNaN(maxV) || maxV <= 0) { showErr('err-van-maxv', 'Enter a number greater than 0.'); valid = false; }
+
+    if (!valid) return;
+
+    vans.push({ id: vid, maxW, maxV, loadW: 0, loadV: 0, parcels: [] });
+
+    document.getElementById('van-id').value = '';
+    document.getElementById('van-maxw').value = '';
+    document.getElementById('van-maxv').value = '';
+
+    renderVansTable();
+    updateStats();
+    showActionMsg(`✅ Van <strong>${vid}</strong> added successfully.`, 'success');
+  }
+
+  // ----------------------------------------------------------------
+  // ASSIGN PARCELS  (mirrors assign_parcels() — greedy algorithm)
+  // ----------------------------------------------------------------
+  function assignParcels() {
+    if (parcels.length === 0 || vans.length === 0) {
+      showActionMsg('⚠️ Add at least one parcel AND one van before assigning.', 'warning');
+      return;
+    }
+
+    // reset
+    unloaded = [];
+    vans.forEach(v => { v.loadW = 0; v.loadV = 0; v.parcels = []; });
+
+    // sort: priority ascending (1=High first), then heavier first within same priority
+    const order = [...parcels].sort((a, b) =>
+      a.priority !== b.priority ? a.priority - b.priority : b.weight - a.weight
+    );
+
+    const biggestW = Math.max(...vans.map(v => v.maxW));
+    const biggestV = Math.max(...vans.map(v => v.maxV));
+
+    for (const p of order) {
+      let placed = false;
+      for (const v of vans) {
+        if (v.loadW + p.weight <= v.maxW && v.loadV + p.volume <= v.maxV) {
+          v.parcels.push(p);
+          v.loadW += p.weight;
+          v.loadV += p.volume;
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        let reason;
+        if (p.weight > biggestW)      reason = "Heavier than the biggest van";
+        else if (p.volume > biggestV) reason = "Bigger than the biggest van";
+        else                           reason = "No van has enough space left";
+        unloaded.push({ parcel: p, reason });
+      }
+    }
+
+    assigned = true;
+    const loaded = parcels.length - unloaded.length;
+    showActionMsg(
+      `🔄 Done. Loaded <strong>${loaded}</strong> parcel(s), left behind <strong>${unloaded.length}</strong>.`,
+      unloaded.length > 0 ? 'warning' : 'success'
+    );
+
+    renderLoadSheet();
+    renderNotLoaded();
+    updateStats();
+  }
+
+  // ----------------------------------------------------------------
+  // LOAD SAMPLE DATA  (mirrors load_sample_data())
+  // ----------------------------------------------------------------
+  function loadSampleData() {
+    parcels  = [];
+    vans     = [];
+    unloaded = [];
+    assigned = false;
+
+    const sampleParcels = [
+      { id: "P1", weight: 40,  volume: 0.5, priority: 1 },
+      { id: "P2", weight: 120, volume: 1.5, priority: 3 },
+      { id: "P3", weight: 60,  volume: 0.8, priority: 1 },
+      { id: "P4", weight: 90,  volume: 1.0, priority: 2 },
+      { id: "P5", weight: 500, volume: 3.0, priority: 2 },
+      { id: "P6", weight: 30,  volume: 0.4, priority: 3 },
+    ];
+
+    const sampleVans = [
+      { id: "VAN-A", maxW: 200, maxV: 3.0 },
+      { id: "VAN-B", maxW: 150, maxV: 2.0 },
+    ];
+
+    sampleParcels.forEach(p => parcels.push(p));
+    sampleVans.forEach(v => vans.push({ ...v, loadW: 0, loadV: 0, parcels: [] }));
+
+    renderParcelsTable();
+    renderVansTable();
+    renderLoadSheet();
+    renderNotLoaded();
+    updateStats();
+    showActionMsg('📋 Sample data loaded: 6 parcels, 2 vans. Now click <strong>Assign Parcels</strong>!', 'info');
+  }
+
+  // ----------------------------------------------------------------
+  // CLEAR ALL
+  // ----------------------------------------------------------------
+  function clearAll() {
+    // show inline confirmation instead of browser confirm() which can trap focus
+    const existing = document.getElementById('clear-confirm-box');
+    if (existing) { existing.remove(); return; }
+
+    const box = document.createElement('div');
+    box.id = 'clear-confirm-box';
+    box.className = 'alert alert-warning';
+    box.style.cssText = 'margin-top:10px;display:flex;flex-direction:column;gap:8px;';
+    box.innerHTML = `
+      <span>⚠️ Are you sure? This will remove everything.</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" id="clear-yes"
+          style="background:#c53030;color:white;width:auto;padding:6px 16px;">
+          Yes, clear all
+        </button>
+        <button class="btn btn-gray btn-sm" id="clear-no">Cancel</button>
+      </div>`;
+
+    document.getElementById('action-msg').appendChild(box);
+
+    document.getElementById('clear-no').onclick = () => box.remove();
+
+    document.getElementById('clear-yes').onclick = () => {
+      box.remove();
+      parcels  = [];
+      vans     = [];
+      unloaded = [];
+      assigned = false;
+
+      // reset all input fields
+      ['parcel-id','parcel-weight','parcel-volume'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('parcel-priority').value = '1';
+      ['van-id','van-maxw','van-maxv'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+
+      // clear any error messages
+      ['err-parcel-id','err-parcel-weight','err-parcel-volume',
+       'err-van-id','err-van-maxw','err-van-maxv'].forEach(id => clearErr(id));
+
+      renderParcelsTable();
+      renderVansTable();
+      renderLoadSheet();
+      renderNotLoaded();
+      updateStats();
+      showActionMsg('🗑️ All data cleared.', 'info');
+    };
+  }
+
+  // ----------------------------------------------------------------
+  // RENDER: Parcels Table
+  // ----------------------------------------------------------------
+  function renderParcelsTable() {
+    const wrap = document.getElementById('parcels-table-wrap');
+    if (parcels.length === 0) {
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><p>No parcels added yet.<br>Use the form on the left.</p></div>`;
+      return;
+    }
+
+    let rows = parcels.map(p => `
+      <tr>
+        <td><strong>${p.id}</strong></td>
+        <td class="text-right">${p.weight.toFixed(1)}</td>
+        <td class="text-right">${p.volume.toFixed(2)}</td>
+        <td>${priorityBadge(p.priority)}</td>
+        <td>
+          <button class="btn btn-gray btn-sm" onclick="deleteParcel('${p.id}')" title="Remove parcel">✕</button>
+        </td>
+      </tr>`).join('');
+
+    wrap.innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th class="text-right">Weight (kg)</th>
+            <th class="text-right">Volume (m³)</th>
+            <th>Priority</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // ----------------------------------------------------------------
+  // RENDER: Vans Table
+  // ----------------------------------------------------------------
+  function renderVansTable() {
+    const wrap = document.getElementById('vans-table-wrap');
+    if (vans.length === 0) {
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🚚</div><p>No vans added yet.<br>Use the form on the left.</p></div>`;
+      return;
+    }
+
+    let rows = vans.map(v => `
+      <tr>
+        <td><strong>${v.id}</strong></td>
+        <td class="text-right">${v.maxW.toFixed(1)}</td>
+        <td class="text-right">${v.maxV.toFixed(2)}</td>
+        <td>
+          <button class="btn btn-gray btn-sm" onclick="deleteVan('${v.id}')" title="Remove van">✕</button>
+        </td>
+      </tr>`).join('');
+
+    wrap.innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th class="text-right">Max Weight (kg)</th>
+            <th class="text-right">Max Volume (m³)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // ----------------------------------------------------------------
+  // RENDER: Load Sheet  (mirrors print_load_sheet())
+  // ----------------------------------------------------------------
+  function renderLoadSheet() {
+    const wrap = document.getElementById('loadsheet-wrap');
+    if (!assigned) {
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>Click <strong>Assign Parcels</strong> to generate the load sheet.</p></div>`;
+      return;
+    }
+
+    let html = '';
+    for (const v of vans) {
+      const wPct = pct(v.loadW, v.maxW);
+      const vPct = pct(v.loadV, v.maxV);
+      const wBar = barClass(wPct);
+      const vBar = barClass(vPct);
+
+      let parcelRows = '';
+      if (v.parcels.length === 0) {
+        parcelRows = `<tr><td colspan="4" style="color:#a0aec0;font-style:italic;padding:12px;">No parcels assigned to this van.</td></tr>`;
+      } else {
+        parcelRows = v.parcels.map(p => `
+          <tr>
+            <td><strong>${p.id}</strong></td>
+            <td class="text-right">${p.weight.toFixed(1)}</td>
+            <td class="text-right">${p.volume.toFixed(2)}</td>
+            <td>${priorityBadge(p.priority)}</td>
+          </tr>`).join('');
+      }
+
+      html += `
+        <div class="van-card">
+          <div class="van-card-head">
+            <div class="van-id">🚚 ${v.id}</div>
+            <span style="font-size:0.8rem;color:#718096;">${v.parcels.length} parcel(s)</span>
+          </div>
+          <div class="van-card-body">
+            <table class="data-table">
+              <thead>
+                <tr><th>ID</th><th class="text-right">Weight</th><th class="text-right">Volume</th><th>Priority</th></tr>
+              </thead>
+              <tbody>${parcelRows}</tbody>
+            </table>
+            <div class="capacity-row">
+              <div class="capacity-item">
+                <label>Weight Used</label>
+                <div class="cap-value">${v.loadW.toFixed(1)} / ${v.maxW.toFixed(1)} kg (${wPct}%)</div>
+                <div class="progress-wrap">
+                  <div class="progress-bar ${wBar}" style="width:${wPct}%"></div>
+                </div>
+              </div>
+              <div class="capacity-item">
+                <label>Volume Used</label>
+                <div class="cap-value">${v.loadV.toFixed(2)} / ${v.maxV.toFixed(2)} m³ (${vPct}%)</div>
+                <div class="progress-wrap">
+                  <div class="progress-bar volume ${vBar}" style="width:${vPct}%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    wrap.innerHTML = html;
+  }
+
+  // ----------------------------------------------------------------
+  // RENDER: Not Loaded  (mirrors print_unloaded())
+  // ----------------------------------------------------------------
+  function renderNotLoaded() {
+    const wrap = document.getElementById('notloaded-wrap');
+    if (!assigned) {
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">🚫</div><p>Click <strong>Assign Parcels</strong> to see which parcels couldn't be loaded.</p></div>`;
+      return;
+    }
+    if (unloaded.length === 0) {
+      wrap.innerHTML = `<div class="alert alert-success" style="margin:0;">✅ All parcels were successfully loaded into vans!</div>`;
+      return;
+    }
+
+    let rows = unloaded.map(item => `
+      <tr>
+        <td><strong>${item.parcel.id}</strong></td>
+        <td class="text-right">${item.parcel.weight.toFixed(1)}</td>
+        <td class="text-right">${item.parcel.volume.toFixed(2)}</td>
+        <td>${priorityBadge(item.parcel.priority)}</td>
+        <td style="color:#c53030;">${item.reason}</td>
+      </tr>`).join('');
+
+    wrap.innerHTML = `
+      <div class="alert alert-warning" style="margin-bottom:14px;">
+        ⚠️ <strong>${unloaded.length}</strong> parcel(s) could not be loaded.
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th class="text-right">Weight</th>
+            <th class="text-right">Volume</th>
+            <th>Priority</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  // ----------------------------------------------------------------
+  // DELETE helpers (bonus feature not in CLI)
+  // ----------------------------------------------------------------
+  function deleteParcel(pid) {
+    parcels = parcels.filter(p => p.id !== pid);
+    assigned = false;
+    renderParcelsTable();
+    renderLoadSheet();
+    renderNotLoaded();
+    updateStats();
+  }
+
+  function deleteVan(vid) {
+    vans = vans.filter(v => v.id !== vid);
+    assigned = false;
+    renderVansTable();
+    renderLoadSheet();
+    renderNotLoaded();
+    updateStats();
+  }
+
+  // ----------------------------------------------------------------
+  // INIT
+  // ----------------------------------------------------------------
+  updateStats();
+</script>
+
+</body>
+</html>
